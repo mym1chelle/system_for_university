@@ -1,16 +1,28 @@
-from fastapi import FastAPI, Depends
-from data.db_config import get_db_connection
+from fastapi import FastAPI
+from students.router import router as student_router
+# from teachers.router import router as teacher_router
+# from courses.router import router as course_router
+# from grades.router import router as grade_router
+
 
 app = FastAPI(
     debug=True,
-    title='Module',
-    description='API для приложения Module'
+    title='Системы управления университетом',
+    description='API для cистемы управления университетом'
 )
 
+app.include_router(
+    student_router
+)
 
-@app.get('/')
-async def add_card(
-    conn=Depends(get_db_connection)
-):
-    # print(conn)
-    return {'status': 'success'}
+# app.include_router(
+#     teacher_router
+# )
+
+# app.include_router(
+#     course_router
+# )
+
+# app.include_router(
+#     grade_router
+# )
