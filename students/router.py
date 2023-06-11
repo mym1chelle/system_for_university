@@ -5,7 +5,7 @@ from students.schemas import (
     GetStudentConfig,
     ChangeStudentConfig
 )
-from db_commands import (
+from students.db_commands import (
     get_group_via_code_db,
     add_student_db,
     get_student_db,
