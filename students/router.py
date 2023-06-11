@@ -20,13 +20,14 @@ router = APIRouter(
 )
 
 
-@router.post('/')
+@router.post('')
 async def add_student(
     student: CreateStudentConfig,
     conn=Depends(get_db_connection)
 ):
     """Добавление нового студента"""
     group = get_group_via_code_db(conn=conn, group_code=student.group_code)
+    print(group)
     group_id = group.id if group else None
     group_code = group.code if group else None
     add_student_db(
@@ -96,6 +97,6 @@ async def delete_student(
     student_id: int,
     conn=Depends(get_db_connection)
 ):
-    """Изменить данные студента по ID"""
+    """Удалить студента по ID"""
     delete_student_db(conn=conn, student_id=student_id)
     return {}

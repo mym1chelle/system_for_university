@@ -19,3 +19,23 @@ def get_all_teachers_db(
             (limit, offset)
         )
         return cur.fetchall()
+
+
+def get_teacher_db(
+        conn: psycopg2.connect,
+        surname: str | None,
+        name: str | None,
+        fathers_name: str | None
+):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+        cur.execute(
+            """
+            SELECT * FROM teacher
+            WHERE surname=COALESCE(%s, surname)
+            AND name=COALESCE(%s, name)
+            AND fathers_name=COALESCE(%s, fathers_name)
+            ;
+            """,
+            (surname, name, fathers_name)
+        )
+        return cur.fetchone()

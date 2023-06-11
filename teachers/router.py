@@ -1,8 +1,7 @@
-from typing import List
 from fastapi import APIRouter, Depends
 from data.db_config import get_db_connection
 from teachers.db_commands import get_all_teachers_db
-from teachers.schemas import GetTeacherConfig
+from teachers.schemas import GetAllTeachersConfig
 
 
 router = APIRouter(
@@ -11,7 +10,7 @@ router = APIRouter(
 )
 
 
-@router.get('/')
+@router.get('')
 async def get_all_teachers(
     conn=Depends(get_db_connection),
     limit: int = 15,
@@ -24,7 +23,7 @@ async def get_all_teachers(
         offset=offset
     )
     return [
-        GetTeacherConfig(
+        GetAllTeachersConfig(
             id=teacher.id,
             surname=teacher.surname,
             name=teacher.name,
