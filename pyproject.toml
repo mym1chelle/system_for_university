@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "system-for-university"
+version = "0.1.0"
+description = ""
+authors = ["Timur <81976283+mym1chelle@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "system_for_university"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = {extras = ["all"], version = "^0.96.1"}
+psycopg2-binary = "^2.9.6"
+environs = "^9.5.0"
+gunicorn = "^20.1.0"
+
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.2"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
