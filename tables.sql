@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS course_programme (
 
 CREATE TABLE IF NOT EXISTS course (
     id bigint PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    name VARCHAR(50) NOT NULL,
+    name VARCHAR(50) NOT NULL UNIQUE,
     course_programme_id bigint REFERENCES course_programme(id) UNIQUE,
     teacher_id bigint REFERENCES teacher(id) ON DELETE SET NULL
 );
