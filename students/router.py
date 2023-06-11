@@ -1,8 +1,17 @@
 from fastapi import APIRouter, Depends
-from fastapi import status, HTTPException
-from psycopg2.extras import NamedTupleCursor
 from data.db_config import get_db_connection
-from students.schemas import CreateStudentConfig, GetStudentConfig
+from students.schemas import (
+    CreateStudentConfig,
+    GetStudentConfig,
+    ChangeStudentConfig
+)
+from db_commands import (
+    get_group_via_code_db,
+    add_student_db,
+    get_student_db,
+    edit_student_db,
+    delete_student_db
+)
 
 
 router = APIRouter(
@@ -11,37 +20,30 @@ router = APIRouter(
 )
 
 
-@router.post('/', response_model=CreateStudentConfig)
+@router.post('/')
 async def add_student(
     student: CreateStudentConfig,
     conn=Depends(get_db_connection)
 ):
     """Добавление нового студента"""
-    group_id = None
-    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
-        cur.execute(
-            "SELECT id FROM students_group WHERE code=(%s);",
-            (student.group_code,)
-        )
-        group = cur.fetchone()
-    if group:
-        group_id = group.id
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            INSERT INTO student (
-                surname, name, fathers_name, date_of_birth, group_id
-            ) VALUES (%s, %s, %s, %s, %s);""",
-            (
-                student.surname,
-                student.name,
-                student.fathers_name,
-                student.date_of_birth,
-                group_id
-            )
-        )
-    conn.commit()
-    return student
+    group = get_group_via_code_db(conn=conn, group_code=student.group_code)
+    group_id = group.id if group else None
+    group_code = group.code if group else None
+    add_student_db(
+        conn=conn,
+        surname=student.surname,
+        name=student.name,
+        fathers_name=student.fathers_name,
+        date_of_birth=student.date_of_birth,
+        group_id=group_id
+    )
+    return CreateStudentConfig(**{
+        'surname': student.surname,
+        'name': student.name,
+        'fathers_name': student.fathers_name,
+        'date_of_birth': student.date_of_birth,
+        'group_code': group_code
+    })
 
 
 @router.get('/{student_id}')
@@ -50,26 +52,50 @@ async def get_student(
     conn=Depends(get_db_connection)
 ):
     """Выбор студента по ID"""
-    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
-        cur.execute(
-            """
-            SELECT st.id, st.name, st.surname, st.fathers_name, st.date_of_birth, gp.code
-            FROM student as st
-            LEFT JOIN students_group as gp ON gp.id=st.group_id
-            WHERE st.id=(%s)
-            ;
-            """,
-            (student_id,)
-        )
-        student = cur.fetchone()
-        print(student)
-        if student:
-            return GetStudentConfig(**{
-                'id': student.id,
-                'surname': student.surname,
-                'name': student.name,
-                'fathers_name': student.fathers_name,
-                'date_of_birth': student.date_of_birth,
-                'group_code': student.code
-            })
+    student = get_student_db(conn=conn, student_id=student_id)
+    if student:
+        return GetStudentConfig(**{
+            'id': student.id,
+            'surname': student.surname,
+            'name': student.name,
+            'fathers_name': student.fathers_name,
+            'date_of_birth': student.date_of_birth,
+            'group_code': student.code
+        })
+    return {}
+
+
+@router.put('/{student_id}')
+async def edit_student(
+    student_id: int,
+    student: ChangeStudentConfig,
+    conn=Depends(get_db_connection)
+):
+    """Изменить данные студента по ID"""
+    changed_student = edit_student_db(
+        conn=conn,
+        surname=student.surname,
+        name=student.name,
+        fathers_name=student.fathers_name,
+        date_of_birth=student.date_of_birth,
+        group_code=student.group_code,
+        student_id=student_id
+    )
+    return GetStudentConfig(**{
+        'id': changed_student.id,
+        'surname': changed_student.surname,
+        'name': changed_student.name,
+        'fathers_name': changed_student.fathers_name,
+        'date_of_birth': changed_student.date_of_birth,
+        'group_code': student.group_code
+    })
+
+
+@router.delete('/{student_id}')
+async def delete_student(
+    student_id: int,
+    conn=Depends(get_db_connection)
+):
+    """Изменить данные студента по ID"""
+    delete_student_db(conn=conn, student_id=student_id)
     return {}
