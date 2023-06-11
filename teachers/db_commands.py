@@ -23,7 +23,7 @@ def get_all_teachers_db(
         return cur.fetchall()
 
 
-def get_teacher_db(
+def get_teacher_id_or_none(
         conn: psycopg2.connect,
         teacher: GetTeacherConfig | None
 ):
@@ -49,3 +49,18 @@ def get_teacher_db(
             )
     else:
         return teacher
+
+
+def get_teacher_via_id(
+        conn: psycopg2.connect,
+        id: int
+):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+        cur.execute(
+            """
+                SELECT * FROM teacher
+                WHERE id=(%s);
+                """,
+            (id)
+        )
+        return cur.fetchone()
