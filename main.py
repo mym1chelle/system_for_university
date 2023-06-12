@@ -7,7 +7,7 @@ from grades.router import router as grade_router
 
 app = FastAPI(
     debug=True,
-    title='Системы управления университетом',
+    title='Система управления университетом',
     description='API для cистемы управления университетом'
 )
 
