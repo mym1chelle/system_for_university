@@ -17,7 +17,7 @@ async def get_all_teachers(
     limit: int = 15,
     offset: int = 0,
 ):
-    """Вывод всех преподавателей"""
+    """Показывает всех преподавателей"""
     return get_all_teachers_db(
         conn=conn,
         limit=limit,
