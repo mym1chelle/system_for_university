@@ -1,8 +1,7 @@
 import psycopg2
-from datetime import date
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
-from students.schemas import CreateStudent, StudentOptional
+from students.schemas import StudentInfoForCreation, StudentInfoOptional
 
 
 def get_group_id_by_code(conn: psycopg2.connect, group_code: int):
@@ -17,7 +16,7 @@ def get_group_id_by_code(conn: psycopg2.connect, group_code: int):
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'Group with this code is not exist: {group_code}'
+                detail=f'The group with code «{group_code}» does not exist'
             )
 
 
@@ -46,13 +45,13 @@ def get_student_by_id_or_404(conn: psycopg2.connect, student_id: int):
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'Student with this ID is not exist: {student_id}'
+                detail=f'The student with ID «{student_id}» does not exist'
             )
 
 
 def add_student_db(
         conn: psycopg2.connect,
-        student: CreateStudent
+        student: StudentInfoForCreation
 ):
     group_id = get_group_id_by_code(conn=conn, group_code=student.group_code)
 
@@ -83,7 +82,7 @@ def add_student_db(
 
 def update_student(
         conn: psycopg2.connect,
-        student: StudentOptional,
+        student: StudentInfoOptional,
         student_id: int
 ):
     if student.group_code is not None:
@@ -159,4 +158,4 @@ def delete_student_db(
             )
         )
         conn.commit()
-    return {"detail": f"Student with this ID was delete: {student_id}"}
+    return {"detail": f"Student with ID «{student_id}» was delete"}

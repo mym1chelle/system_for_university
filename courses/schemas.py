@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
-from teachers.schemas import GetTeacherFullInfo
+from teachers.schemas import TeacherFullInfoOptional
 
 
 class CourseProgrammeOptional(BaseModel):
@@ -14,24 +14,18 @@ class CreateCourse(BaseModel):
     course_programme_name: Optional[str]
 
 
-class GetCourse(CreateCourse):
+class CourseData(CreateCourse):
     pass
 
 
-class CreateCourseResult(BaseModel):
-    curse_name: str
-    course_programme_id: int | None
-    teacher_id: int | None
-
-
-class GetCourseInfo(BaseModel):
+class CourseInfo(BaseModel):
     id: int
     name: str
     course_programme: CourseProgrammeOptional
-    teacher: GetTeacherFullInfo
+    teacher: TeacherFullInfoOptional
 
 
-class GetCourseSmallInfo(BaseModel):
+class CourseSmallInfo(BaseModel):
     id: int
     name: str
     course_programme_id: int | None

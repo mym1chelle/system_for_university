@@ -1,15 +1,18 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
-from teachers.schemas import GetTeacher
-from teachers.db_commands import get_teacher_info_or_empty_dict_by_id, get_teacher_info_or_empty_dict
-from courses.schemas import CreateCourse, CreateCourseResult, GetCourse
+from teachers.db_commands import (
+    get_teacher_info_or_empty_dict_by_id,
+    get_teacher_info_or_empty_dict
+)
+from courses.schemas import CreateCourse, CourseData
 
 
 def get_course_by_name(
         conn: psycopg2.connect,
         name: str
 ):
+    """Возвращает данные о курсе по названию курса"""
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -22,12 +25,11 @@ def get_course_by_name(
 
 def get_course_by_id_or_404(
         conn: psycopg2.connect,
-        id: str
+        id: int
 ):
     """
     Возвращает данные о курсе по ID
-    Если такой курс с таким ID не найден
-    вызывает ошибку 404
+    Если такой курс с таким ID не найден вызывает ошибку 404
     """
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
@@ -41,7 +43,7 @@ def get_course_by_id_or_404(
         if not course:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail='The course does not exist'
+                detail=f'The course with ID {id} does not exist'
             )
         else:
             teacher = get_teacher_info_or_empty_dict_by_id(
@@ -60,16 +62,24 @@ def get_course_by_id_or_404(
             }
 
 
-def add_course_db(
+def add_new_course(
         conn: psycopg2.connect,
         course: CreateCourse,
         teacher: int | None
 ):
+    """Добавляет новый курс в базу данных
+
+    Для создания нового курса нужно получить информацию о программе курса
+    и преподавателе, который ведет курс
+
+    В данной функции проводится поиск данных по переданным параметрам и 
+    валидация
+    """
     is_course_exist = get_course_by_name(conn=conn, name=course.curse_name)
     if is_course_exist:
         raise HTTPException(
             status_code=status.HTTP_200_OK,
-            detail=f'The course already exists: {course.curse_name}'
+            detail=f'The course «{course.curse_name}» already exists'
         )
     else:
         course_programme = get_course_programme_info_or_empty_dict(
@@ -103,7 +113,7 @@ def add_course_db(
 
 def get_course_programme_id_or_none(
         conn: psycopg2.connect,
-        course: GetCourse
+        course: CourseData
 ):
     """
     Возвращает ID программы для выбранного курса
@@ -125,7 +135,7 @@ def get_course_programme_id_or_none(
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'The course programme does not exist: {name}'
+                detail=f'The course programme «{name}» does not exist'
             )
     return name
 

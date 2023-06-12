@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
-from grades.schemas import AddNewGradeForCourse
+from grades.schemas import GradeForCourseInfoForCreation
 from students.db_commands import get_student_by_id_or_404
 from courses.db_commands import get_course_by_id_or_404
 
@@ -32,7 +32,7 @@ def get_grade_by_name_or_404(
     if not grade:
         raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'The grade {grade_name} does not exist'
+                detail=f'The grade «{grade_name}» does not exist'
             )
     else:
         return {
@@ -49,7 +49,7 @@ def create_new_grade(
     if grade:
         raise HTTPException(
                 status_code=status.HTTP_200_OK,
-                detail=f'The grade {grade_name} already exists'
+                detail=f'The grade «{grade_name}» already exists'
             )
     else:
         with conn.cursor() as cur:
@@ -76,8 +76,6 @@ def grade_not_exists_or_404(
         course_id: int,
         student_id: int
 ):
-    print(course_id)
-    print(student_id)
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -90,7 +88,7 @@ def grade_not_exists_or_404(
     if grade:
         raise HTTPException(
             status_code=status.HTTP_200_OK,
-            detail='A grade for this student in this course already exists'
+            detail='The grade for this student in this course already exists'
         )
     else:
         return None
@@ -98,7 +96,7 @@ def grade_not_exists_or_404(
 
 def add_new_grade_for_course(
         conn: psycopg2.connect,
-        data_for_grade: AddNewGradeForCourse
+        data_for_grade: GradeForCourseInfoForCreation
 ):
     grade = get_grade_by_name_or_404(
         conn=conn,
@@ -131,4 +129,60 @@ def add_new_grade_for_course(
             'student': student,
             'course': course,
             'grade': grade
+        }
+
+
+def get_grade_for_course_data_or_404(
+        conn: psycopg2.connect,
+        id: int
+):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+        cur.execute(
+            """
+            SELECT * FROM course_grade
+            WHERE id=(%s);
+            """,
+            (id,)
+        )
+        grade_for_course = cur.fetchone()
+        if not grade_for_course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f'The grade for course with ID «{id}» does not exist'
+            )
+        else:
+            return grade_for_course
+
+
+def edit_grade_for_course(
+        conn: psycopg2.connect,
+        grade_name: str,
+        course_grade_id: int
+):
+    grade = get_grade_by_name_or_404(
+        conn=conn,
+        grade_name=grade_name
+    )
+    grade_for_course = get_grade_for_course_data_or_404(
+        conn=conn,
+        id=course_grade_id
+    )
+    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+        cur.execute(
+            """
+            UPDATE course_grade SET
+                grade_id=(%s)
+            WHERE id=(%s);
+            """,
+            (
+                grade.get('id'),
+                grade_for_course.id
+            )
+        )
+        conn.commit()
+        return {
+            'id': grade_for_course.id,
+            'student_id': grade_for_course.student_id,
+            'course_id': grade_for_course.course_id,
+            'grade_id': grade.get('id')
         }

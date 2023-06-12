@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import date
 
 
-class CreateStudent(BaseModel):
+class StudentInfoForCreation(BaseModel):
     surname: str
     name: str
     fathers_name: Optional[str]
@@ -11,7 +11,7 @@ class CreateStudent(BaseModel):
     group_code: Optional[int]
 
 
-class GetStudent(BaseModel):
+class StudentInfo(BaseModel):
     id: int
     surname: str
     name: str
@@ -20,7 +20,7 @@ class GetStudent(BaseModel):
     group_code: Optional[int] | None
 
 
-class StudentOptional(BaseModel):
+class StudentInfoOptional(BaseModel):
     surname: Optional[str]
     name: Optional[str]
     fathers_name: Optional[str]
@@ -28,7 +28,7 @@ class StudentOptional(BaseModel):
     group_code: Optional[int]
 
 
-class GetStudentSmallInfo(BaseModel):
+class StudentSmallInfo(BaseModel):
     id: int
     surname: str
     name: str

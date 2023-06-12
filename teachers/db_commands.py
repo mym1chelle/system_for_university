@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
-from teachers.schemas import AddTeacherID
+from teachers.schemas import TeacherID
 
 
 def get_all_teachers_db(
@@ -10,7 +10,7 @@ def get_all_teachers_db(
         offset: int
 ):
     """
-    Вернет список словарей с даммыми всех учителей
+    Вернет список словарей с данными всех преподавателей
     """
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
@@ -24,7 +24,6 @@ def get_all_teachers_db(
             (limit, offset)
         )
         teachers = cur.fetchall()
-        print(teachers)
         return [
             {
                 'id': teacher.id,
@@ -41,7 +40,7 @@ def get_teacher_info_or_empty_dict_by_id(
         id: int
 ):
     """
-    Возвращает информацию о преподавателе в виде словаря по ID
+    Вернет информацию о преподавателе в виде словаря по ID
     если ID = None – вернет пустой словарь
     """
     if id:
@@ -64,32 +63,16 @@ def get_teacher_info_or_empty_dict_by_id(
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'The teacher with ID {id} does not exists'
+                detail=f'The teacher with ID «{id}» does not exist'
             )
     else:
         course_teacher = {}
     return course_teacher
 
 
-def get_teacher_by_id(
-        conn: psycopg2.connect,
-        id: int
-):
-    """Возвращает информацию о преподавателе по ID"""
-    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
-        cur.execute(
-            """
-                SELECT * FROM teacher
-                WHERE id=(%s);
-                """,
-            (id)
-        )
-        return cur.fetchone()
-
-
 def get_teacher_info_or_empty_dict(
     conn: psycopg2.connect,
-    teacher: AddTeacherID
+    teacher: TeacherID
 ):
     if teacher is None:
         return {}
