@@ -6,7 +6,7 @@ class GetAllTeachers(BaseModel):
     id: int
     surname: str
     name: str
-    fathers_name: Optional[str]
+    fathers_name: str | None
 
 
 class GetTeacherFullInfo(BaseModel):

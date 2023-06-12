@@ -1,15 +1,14 @@
 from fastapi import APIRouter, Depends
 from data.db_config import get_db_connection
 from students.schemas import (
-    CreateStudentConfig,
-    GetStudentConfig,
-    ChangeStudentConfig
+    CreateStudent,
+    GetStudent,
+    ChangeStudent
 )
 from students.db_commands import (
-    get_group_via_code_db,
     add_student_db,
-    get_student_db,
-    edit_student_db,
+    get_student_by_id,
+    update_student,
     delete_student_db
 )
 
@@ -20,76 +19,41 @@ router = APIRouter(
 )
 
 
-@router.post('')
+@router.post('', response_model=CreateStudent)
 async def add_student(
-    student: CreateStudentConfig,
+    student: CreateStudent,
     conn=Depends(get_db_connection)
 ):
     """Добавление нового студента"""
-    group = get_group_via_code_db(conn=conn, group_code=student.group_code)
-    print(group)
-    group_id = group.id if group else None
-    group_code = group.code if group else None
-    add_student_db(
+    return add_student_db(
         conn=conn,
-        surname=student.surname,
-        name=student.name,
-        fathers_name=student.fathers_name,
-        date_of_birth=student.date_of_birth,
-        group_id=group_id
+        student=student
     )
-    return CreateStudentConfig(**{
-        'surname': student.surname,
-        'name': student.name,
-        'fathers_name': student.fathers_name,
-        'date_of_birth': student.date_of_birth,
-        'group_code': group_code
-    })
 
 
-@router.get('/{student_id}')
+@router.get('/{student_id}', response_model=GetStudent)
 async def get_student(
     student_id: int,
     conn=Depends(get_db_connection)
 ):
     """Выбор студента по ID"""
-    student = get_student_db(conn=conn, student_id=student_id)
-    if student:
-        return GetStudentConfig(**{
-            'id': student.id,
-            'surname': student.surname,
-            'name': student.name,
-            'fathers_name': student.fathers_name,
-            'date_of_birth': student.date_of_birth,
-            'group_code': student.code
-        })
-    return {}
+    return get_student_by_id(conn=conn, student_id=student_id)
 
 
-@router.put('/{student_id}')
+@router.put('/{student_id}', response_model=GetStudent)
 async def edit_student(
     student_id: int,
-    student: ChangeStudentConfig,
+    student: ChangeStudent,
     conn=Depends(get_db_connection)
 ):
     """Изменить данные студента по ID"""
-    changed_student = edit_student_db(
+    s = update_student(
         conn=conn,
-        surname=student.surname,
-        name=student.name,
-        fathers_name=student.fathers_name,
-        date_of_birth=student.date_of_birth,
-        group_code=student.group_code,
+        student=student,
         student_id=student_id
     )
-    return GetStudentConfig(**{
-        'id': changed_student.id,
-        'surname': changed_student.surname,
-        'name': changed_student.name,
-        'fathers_name': changed_student.fathers_name,
-        'date_of_birth': changed_student.date_of_birth,
-        'group_code': student.group_code
-    })
+    print(s)
+    return s
 
 
 @router.delete('/{student_id}')
@@ -98,5 +62,4 @@ async def delete_student(
     conn=Depends(get_db_connection)
 ):
     """Удалить студента по ID"""
-    delete_student_db(conn=conn, student_id=student_id)
-    return {}
+    return delete_student_db(conn=conn, student_id=student_id)

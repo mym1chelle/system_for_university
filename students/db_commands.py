@@ -2,18 +2,26 @@ import psycopg2
 from datetime import date
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
+from students.schemas import CreateStudent, ChangeStudent
 
 
-def get_group_via_code_db(conn: psycopg2.connect, group_code: int):
+def get_group_id_by_code(conn: psycopg2.connect, group_code: int):
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
-            "SELECT id, code FROM students_group WHERE code=(%s);",
+            "SELECT id FROM students_group WHERE code=(%s);",
             (group_code,)
         )
-        return cur.fetchone()
+        group = cur.fetchone()
+        if group:
+            return group
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f'Group with this code is not exist: {group_code}'
+            )
 
 
-def get_student_db(conn: psycopg2.connect, student_id: int):
+def get_student_by_id(conn: psycopg2.connect, student_id: int):
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -25,17 +33,29 @@ def get_student_db(conn: psycopg2.connect, student_id: int):
             """,
             (student_id,)
         )
-        return cur.fetchone()
+        student = cur.fetchone()
+        if student:
+            return {
+                'id': student.id,
+                'surname': student.surname,
+                'name': student.name,
+                'fathers_name': student.fathers_name,
+                'date_of_birth': student.date_of_birth,
+                'group_code': student.code
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f'Student with this ID is not exist: {student_id}'
+            )
 
 
 def add_student_db(
         conn: psycopg2.connect,
-        surname: str,
-        name: str,
-        fathers_name: str | None,
-        date_of_birth: date,
-        group_id: int | None
+        student: CreateStudent
 ):
+    group_id = get_group_id_by_code(conn=conn, group_code=student.group_code)
+
     with conn.cursor() as cur:
         cur.execute(
             """
@@ -44,94 +64,90 @@ def add_student_db(
             ) VALUES (%s, %s, %s, %s, %s);
             """,
             (
-                surname,
-                name,
-                fathers_name,
-                date_of_birth,
+                student.surname,
+                student.name,
+                student.fathers_name,
+                student.date_of_birth,
                 group_id
             )
         )
     conn.commit()
+    return {
+        'surname': student.surname,
+        'name': student.name,
+        'fathers_name': student.fathers_name,
+        'date_of_birth': student.date_of_birth,
+        'group_code': student.group_code
+    }
 
 
 def update_student(
         conn: psycopg2.connect,
-        surname: str | None,
-        name: str | None,
-        fathers_name: str | None,
-        date_of_birth: date | None,
-        group_id: int | None,
+        student: ChangeStudent,
         student_id: int
 ):
-    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
-        cur.execute(
-            """
-            UPDATE student SET
-                surname=COALESCE(%s, surname),
-                name=COALESCE(%s, name),
-                fathers_name=COALESCE(%s, fathers_name),
-                date_of_birth=COALESCE(%s, date_of_birth),
-                group_id=COALESCE(%s, group_id)
-            WHERE id=(%s);
-            """,
-            (
-                surname,
-                name,
-                fathers_name,
-                date_of_birth,
-                group_id,
-                student_id,
-            )
+    if student.group_code is not None:
+        group = get_group_id_by_code(
+            conn=conn, group_code=student.group_code
         )
+        with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+            cur.execute(
+                """
+                UPDATE student SET
+                    surname=COALESCE(%s, surname),
+                    name=COALESCE(%s, name),
+                    fathers_name=COALESCE(%s, fathers_name),
+                    date_of_birth=COALESCE(%s, date_of_birth),
+                    group_id=COALESCE(%s, group_id)
+                WHERE id=(%s);
+                """,
+                (
+                    student.surname,
+                    student.name,
+                    student.fathers_name,
+                    student.date_of_birth,
+                    group.id,
+                    student_id,
+                )
+            )
         conn.commit()
-
-
-def edit_student_db(
-        conn: psycopg2.connect,
-        surname: str | None,
-        name: str | None,
-        fathers_name: str | None,
-        date_of_birth: date | None,
-        group_code: int | None,
-        student_id: int
-):
-    if group_code is not None:
-        group = get_group_via_code_db(conn=conn, group_code=group_code)
-        if group:
-            update_student(
-                conn=conn,
-                surname=surname,
-                name=name,
-                fathers_name=fathers_name,
-                date_of_birth=date_of_birth,
-                group_id=group.id,
-                student_id=student_id
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'There is no group with this code: {group_code}'
-            )
     else:
-        update_student(
-                conn=conn,
-                surname=surname,
-                name=name,
-                fathers_name=fathers_name,
-                date_of_birth=date_of_birth,
-                group_id=group_code,
-                student_id=student_id
+        with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+            cur.execute(
+                """
+                UPDATE student SET
+                    surname=COALESCE(%s, surname),
+                    name=COALESCE(%s, name),
+                    fathers_name=COALESCE(%s, fathers_name),
+                    date_of_birth=COALESCE(%s, date_of_birth),
+                    group_id=COALESCE(%s, group_id)
+                WHERE id=(%s);
+                """,
+                (
+                    student.surname,
+                    student.name,
+                    student.fathers_name,
+                    student.date_of_birth,
+                    student.group_code,
+                    student_id,
+                )
             )
-    return get_student_db(
-        conn=conn,
-        student_id=student_id
-    )
+        conn.commit()
+    return {
+        'id': student_id,
+        'surname': student.surname,
+        'name': student.name,
+        'fathers_name': student.fathers_name,
+        'date_of_birth': student.date_of_birth,
+        'group_code': student.group_code
+    }
 
 
 def delete_student_db(
         conn: psycopg2.connect,
         student_id: int
 ):
+    get_student_by_id(conn=conn, student_id=student_id)
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -143,3 +159,4 @@ def delete_student_db(
             )
         )
         conn.commit()
+    return {"detail": f"Student with this ID was delete: {student_id}"}

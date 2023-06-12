@@ -23,7 +23,17 @@ def get_all_teachers_db(
             """,
             (limit, offset)
         )
-        return cur.fetchall()
+        teachers = cur.fetchall()
+        print(teachers)
+        return [
+            {
+                'id': teacher.id,
+                'surname': teacher.surname,
+                'name': teacher.name,
+                'fathers_name': teacher.fathers_name
+
+            } for teacher in teachers
+        ]
 
 
 def get_teacher_info_or_empty_dict(
