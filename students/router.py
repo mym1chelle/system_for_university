@@ -6,7 +6,7 @@ from students.schemas import (
     StudentInfoOptional
 )
 from students.db_commands import (
-    add_student_db,
+    add_new_student,
     get_student_by_id_or_404,
     update_student,
     delete_student_db
@@ -25,7 +25,7 @@ async def add_student(
     conn=Depends(get_db_connection)
 ):
     """Добавление нового студента"""
-    return add_student_db(
+    return add_new_student(
         conn=conn,
         student=student
     )

@@ -10,6 +10,9 @@ def get_grade_by_name(
         conn: psycopg2.connect,
         grade_name: str
 ):
+    """
+    Возвращает информацию о выбранной оценке по имени
+    """
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -25,6 +28,10 @@ def get_grade_by_name_or_404(
         conn: psycopg2.connect,
         grade_name: str
 ):
+    """
+    Возвращает информацию о выбранной оценке по имени
+    Если оценка не найдена вызовет ошибку 404
+    """
     grade = get_grade_by_name(
         conn=conn,
         grade_name=grade_name
@@ -45,6 +52,10 @@ def create_new_grade(
         conn: psycopg2.connect,
         grade_name: str
 ):
+    """
+    Добавляет новую оценку.
+    Если оценка уже существует — выведет соотв. сообщение
+    """
     grade = get_grade_by_name(conn=conn, grade_name=grade_name)
     if grade:
         raise HTTPException(
@@ -71,11 +82,15 @@ def create_new_grade(
         }
 
 
-def grade_not_exists_or_404(
+def course_grade_not_exists_or_error(
         conn: psycopg2.connect,
         course_id: int,
         student_id: int
 ):
+    """
+    Возвращает False если студенту еще не стоит оценка за курс
+    Если оценка за курс студенту уже стоит — выведет соотв. сообщение
+    """
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -91,13 +106,20 @@ def grade_not_exists_or_404(
             detail='The grade for this student in this course already exists'
         )
     else:
-        return None
+        return False
 
 
 def add_new_grade_for_course(
         conn: psycopg2.connect,
         data_for_grade: GradeForCourseInfoForCreation
 ):
+    
+    """
+    Выставляет оцентку студенту за курс
+
+    Производит проверки на существование всех необходимых
+    данных для создания записи в БД и производит валидацию
+    """
     grade = get_grade_by_name_or_404(
         conn=conn,
         grade_name=data_for_grade.grade
@@ -110,7 +132,7 @@ def add_new_grade_for_course(
         conn=conn,
         id=data_for_grade.course_id
     )
-    is_grade_exists = grade_not_exists_or_404(
+    is_grade_exists = course_grade_not_exists_or_error(
         conn=conn,
         course_id=data_for_grade.course_id,
         student_id=data_for_grade.student_id
@@ -132,10 +154,15 @@ def add_new_grade_for_course(
         }
 
 
-def get_grade_for_course_data_or_404(
+def get_course_grade_data_or_404(
         conn: psycopg2.connect,
         id: int
 ):
+    """
+    Проверяет стоит ли пользователю оценка за курс
+    Если оценка стоит, то выводит данные записи
+    Если оценка не стоит — вызовет ошибку 404
+    """
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -159,11 +186,17 @@ def edit_grade_for_course(
         grade_name: str,
         course_grade_id: int
 ):
+    """
+    Изменяет оценку за курс студенту
+
+    Производит проверки на существование всех необходимых
+    данных для изменения записи в БД и производит валидацию
+    """
     grade = get_grade_by_name_or_404(
         conn=conn,
         grade_name=grade_name
     )
-    grade_for_course = get_grade_for_course_data_or_404(
+    grade_for_course = get_course_grade_data_or_404(
         conn=conn,
         id=course_grade_id
     )

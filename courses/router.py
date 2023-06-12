@@ -39,11 +39,10 @@ async def get_course(
 ):
     """Вывод информации о курсе по ID"""
 
-    course = get_course_by_id_or_404(
+    return get_course_by_id_or_404(
         conn=conn,
         id=course_id
     )
-    return course
 
 
 @router.get('/{course_id}/students', response_model=List[StudentInfo])

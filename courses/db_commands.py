@@ -84,7 +84,7 @@ def add_new_course(
     else:
         course_programme = get_course_programme_info_or_empty_dict(
             conn=conn,
-            id=get_course_programme_id_or_none(
+            id=get_course_programme_id_or_none_or_404(
                 conn=conn,
                 course=course
             )
@@ -111,7 +111,7 @@ def add_new_course(
         }
 
 
-def get_course_programme_id_or_none(
+def get_course_programme_id_or_none_or_404(
         conn: psycopg2.connect,
         course: CourseData
 ):
@@ -144,7 +144,8 @@ def get_course_programme_info_or_empty_dict(
         conn: psycopg2.connect,
         id: int
 ):
-    """Возвращает по ID данные о программе курса
+    """
+    Возвращает по ID данные о программе курса
     Если переданный ID = None, то вернет пустой словарь
     """
     if id:
@@ -173,6 +174,11 @@ def get_all_sudents_in_course(
         limit: int,
         offset: int,
 ):
+    """
+    Возвращает список словарей с информацией о студентах,
+    которые проходят выбранный курс
+    Если студентов нет на данном курсе — вернет пустой список
+    """
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """

@@ -5,6 +5,10 @@ from students.schemas import StudentInfoForCreation, StudentInfoOptional
 
 
 def get_group_id_by_code(conn: psycopg2.connect, group_code: int):
+    """
+    Выводит данные группы по коду группы
+    Если группы с таким кодом не найдено — вызовет ошибку 404
+    """
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             "SELECT id FROM students_group WHERE code=(%s);",
@@ -21,6 +25,10 @@ def get_group_id_by_code(conn: psycopg2.connect, group_code: int):
 
 
 def get_student_by_id_or_404(conn: psycopg2.connect, student_id: int):
+    """
+    Выводит информациб о студенте по ID
+    если студент с таким ID не был найден — вызовет ошибку 404
+    """
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -49,10 +57,16 @@ def get_student_by_id_or_404(conn: psycopg2.connect, student_id: int):
             )
 
 
-def add_student_db(
+def add_new_student(
         conn: psycopg2.connect,
         student: StudentInfoForCreation
 ):
+    """
+    Добавляет запись о новом студенте в БД
+
+    Производит проверки на существование всех необходимых
+    данных для добавления записи в БД и производит валидацию
+    """
     group_id = get_group_id_by_code(conn=conn, group_code=student.group_code)
 
     with conn.cursor() as cur:
@@ -85,6 +99,13 @@ def update_student(
         student: StudentInfoOptional,
         student_id: int
 ):
+    """
+    Изменяет данные студента в БД
+
+    Производит проверки на существование всех необходимых
+    данных для изменения записи в БД и производит валидацию
+    """
+
     if student.group_code is not None:
         group = get_group_id_by_code(
             conn=conn, group_code=student.group_code
@@ -146,6 +167,9 @@ def delete_student_db(
         conn: psycopg2.connect,
         student_id: int
 ):
+    """
+    Удаляет студента из базы данных
+    """
     get_student_by_id_or_404(conn=conn, student_id=student_id)
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
