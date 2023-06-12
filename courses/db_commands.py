@@ -75,11 +75,11 @@ def add_new_course(
     В данной функции проводится поиск данных по переданным параметрам и 
     валидация
     """
-    is_course_exist = get_course_by_name(conn=conn, name=course.curse_name)
+    is_course_exist = get_course_by_name(conn=conn, name=course.course_name)
     if is_course_exist:
         raise HTTPException(
             status_code=status.HTTP_200_OK,
-            detail=f'The course «{course.curse_name}» already exists'
+            detail=f'The course «{course.course_name}» already exists'
         )
     else:
         course_programme = get_course_programme_info_or_empty_dict(
@@ -99,10 +99,10 @@ def add_new_course(
                 INSERT INTO course (name, course_programme_id, teacher_id)
                 VALUES (%s, %s, %s);
                 """,
-                (course.curse_name, course_programme.get('id'), course_teacher.get('id'))
+                (course.course_name, course_programme.get('id'), course_teacher.get('id'))
             )
         conn.commit()
-        course = get_course_by_name(conn=conn, name=course.curse_name)
+        course = get_course_by_name(conn=conn, name=course.course_name)
         return {
             'id': course.id,
             'name': course.name,

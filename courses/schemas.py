@@ -10,7 +10,7 @@ class CourseProgrammeOptional(BaseModel):
 
 
 class CreateCourse(BaseModel):
-    curse_name: str
+    course_name: str
     course_programme_name: Optional[str]
 
 
