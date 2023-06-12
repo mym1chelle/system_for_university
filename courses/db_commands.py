@@ -72,7 +72,7 @@ def add_new_course(
     Для создания нового курса нужно получить информацию о программе курса
     и преподавателе, который ведет курс
 
-    В данной функции проводится поиск данных по переданным параметрам и 
+    В данной функции проводится поиск данных по переданным параметрам и
     валидация
     """
     is_course_exist = get_course_by_name(conn=conn, name=course.course_name)
@@ -99,7 +99,11 @@ def add_new_course(
                 INSERT INTO course (name, course_programme_id, teacher_id)
                 VALUES (%s, %s, %s);
                 """,
-                (course.course_name, course_programme.get('id'), course_teacher.get('id'))
+                (
+                    course.course_name,
+                    course_programme.get('id'),
+                    course_teacher.get('id')
+                )
             )
         conn.commit()
         course = get_course_by_name(conn=conn, name=course.course_name)

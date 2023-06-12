@@ -38,13 +38,13 @@ def get_all_teachers_db(
 
 def get_teacher_info_or_empty_dict_by_id(
         conn: psycopg2.connect,
-        id: int
+        id: int | None
 ):
     """
     Возвращает информацию о преподавателе в виде словаря по ID
     если ID = None – вернет пустой словарь
     """
-    if id:
+    if id is not None:
         with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
             cur.execute(
                 """

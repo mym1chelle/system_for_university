@@ -113,7 +113,7 @@ def add_new_grade_for_course(
         conn: psycopg2.connect,
         data_for_grade: GradeForCourseInfoForCreation
 ):
-    
+
     """
     Выставляет оцентку студенту за курс
 
