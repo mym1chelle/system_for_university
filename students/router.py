@@ -3,7 +3,7 @@ from data.db_config import get_db_connection
 from students.schemas import (
     CreateStudent,
     GetStudent,
-    ChangeStudent
+    StudentOptional
 )
 from students.db_commands import (
     add_student_db,
@@ -43,7 +43,7 @@ async def get_student(
 @router.put('/{student_id}', response_model=GetStudent)
 async def edit_student(
     student_id: int,
-    student: ChangeStudent,
+    student: StudentOptional,
     conn=Depends(get_db_connection)
 ):
     """Изменить данные студента по ID"""

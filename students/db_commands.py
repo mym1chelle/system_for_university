@@ -2,7 +2,7 @@ import psycopg2
 from datetime import date
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
-from students.schemas import CreateStudent, ChangeStudent
+from students.schemas import CreateStudent, StudentOptional
 
 
 def get_group_id_by_code(conn: psycopg2.connect, group_code: int):
@@ -83,7 +83,7 @@ def add_student_db(
 
 def update_student(
         conn: psycopg2.connect,
-        student: ChangeStudent,
+        student: StudentOptional,
         student_id: int
 ):
     if student.group_code is not None:

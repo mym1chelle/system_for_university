@@ -2,7 +2,7 @@ import psycopg2
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
 from teachers.schemas import GetTeacher
-from teachers.db_commands import get_teacher_id_or_none, get_teacher_info_or_empty_dict
+from teachers.db_commands import get_teacher_info_or_empty_dict
 from courses.schemas import CreateCourse, CreateCourseResult, GetCourse
 
 
@@ -80,23 +80,22 @@ def get_course_programme_by_id(
 def add_course_db(
         conn: psycopg2.connect,
         course: CreateCourse,
-        teacher: GetTeacher | None
+        teacher_id: int | None
 ):
     is_course_exist = get_course_by_name(conn=conn, name=course.curse_name)
-    print(is_course_exist)
     if is_course_exist:
         raise HTTPException(
             status_code=status.HTTP_200_OK,
-            detail=f'The course already exist: {course.curse_name}'
+            detail=f'The course already exists: {course.curse_name}'
         )
     else:
         course_programme_id = get_course_programme_id_or_none(
             conn=conn,
             course=course
         )
-        course_teacher_id = get_teacher_id_or_none(
+        course_teacher = get_teacher_info_or_empty_dict(
             conn=conn,
-            teacher=teacher
+            id=teacher_id
         )
         with conn.cursor() as cur:
             cur.execute(
@@ -104,13 +103,13 @@ def add_course_db(
                 INSERT INTO course (name, course_programme_id, teacher_id)
                 VALUES (%s, %s, %s);
                 """,
-                (course.curse_name, course_programme_id, course_teacher_id)
+                (course.curse_name, course_programme_id, course_teacher.get('id'))
             )
         conn.commit()
         return CreateCourseResult(
             curse_name=course.curse_name,
             course_programme_id=course_programme_id,
-            teacher_id=course_teacher_id
+            teacher_id=course_teacher.get('id')
         )
 
 

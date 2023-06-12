@@ -20,7 +20,7 @@ router = APIRouter(
 @router.post('')
 async def add_course(
     course: CreateCourse,
-    teacher: GetTeacher = None,
+    teacher_id: int | None,
     conn=Depends(get_db_connection)
 ):
     """Добавление нового курса"""
@@ -28,7 +28,7 @@ async def add_course(
     return add_course_db(
         conn=conn,
         course=course,
-        teacher=teacher
+        teacher_id=teacher_id
     )
 
 

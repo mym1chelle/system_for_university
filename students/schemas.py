@@ -20,7 +20,7 @@ class GetStudent(BaseModel):
     group_code: Optional[int] | None
 
 
-class ChangeStudent(BaseModel):
+class StudentOptional(BaseModel):
     surname: Optional[str]
     name: Optional[str]
     fathers_name: Optional[str]
