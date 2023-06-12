@@ -13,10 +13,8 @@ def get_course_by_name(
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
-                SELECT cr.id, cr.name, cp.name as programme, t.surname FROM course as cr
-                LEFT JOIN course_programme as cp ON cp.id=cr.course_programme_id
-                LEFT JOIN teacher as t ON t.id=cr.teacher_id
-                WHERE cr.name=(%s);
+                SELECT * FROM course
+                WHERE name=(%s);
                 """, (name,)
         )
         return cur.fetchone()
@@ -170,3 +168,36 @@ def get_course_programme_info_or_empty_dict(
     else:
         course_programme = {}
     return course_programme
+
+
+def get_all_sudents_in_course(
+        conn: psycopg2.connect,
+        course_id: int,
+        limit: int,
+        offset: int,
+):
+    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+        cur.execute(
+            """
+                SELECT st.id, st.surname, st.name, st.fathers_name, st.date_of_birth, gp.code FROM course as cr
+                JOIN student_to_course as stct ON stct.course_id = cr.id
+                JOIN student as st ON st.id = stct.student_id
+                LEFT JOIN students_group as gp ON gp.id=st.group_id
+                WHERE cr.id=(%s)
+                ORDER BY id
+                LIMIT (%s)
+                OFFSET (%s);
+                """, (course_id, limit, offset)
+        )
+        students = cur.fetchall()
+        return [
+            {
+                'id': student.id,
+                'surname': student.surname,
+                'name': student.name,
+                'fathers_name': student.fathers_name,
+                'date_of_birth': student.date_of_birth,
+                'group_code': student.code
+
+            } for student in students
+        ]

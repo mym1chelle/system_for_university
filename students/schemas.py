@@ -26,3 +26,12 @@ class ChangeStudent(BaseModel):
     fathers_name: Optional[str]
     date_of_birth: Optional[date]
     group_code: Optional[int]
+
+
+class GetAllStudentsInCourse(BaseModel):
+    id: int
+    surname: str
+    name: str
+    fathers_name: str
+    date_of_birth: date
+    group_code: int

@@ -1,11 +1,14 @@
+from typing import List
 from fastapi import APIRouter, Depends
 from data.db_config import get_db_connection
 from courses.schemas import CreateCourse, GetCourseInfo
 from courses.db_commands import (
     add_course_db,
-    get_course_by_id
+    get_course_by_id,
+    get_all_sudents_in_course
 )
 from teachers.schemas import GetTeacher
+from students.schemas import GetAllStudentsInCourse
 
 
 router = APIRouter(
@@ -41,3 +44,19 @@ async def get_course(
         id=course_id
     )
     return course
+
+
+@router.get('/{course_id}/students', response_model=List[GetAllStudentsInCourse])
+async def get_students_in_courser(
+    course_id: int,
+    conn=Depends(get_db_connection),
+    limit: int = 15,
+    offset: int = 0,
+):
+    """Вывод всех студентов, которые обучаются на курсе"""
+    return get_all_sudents_in_course(
+        conn=conn,
+        course_id=course_id,
+        limit=limit,
+        offset=offset
+    )
