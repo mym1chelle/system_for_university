@@ -144,7 +144,7 @@ def add_new_grade_for_course(
                 INSERT INTO course_grade (student_id, course_id, grade_id)
                 VALUES (%s, %s, %s);
                 """,
-                (student.get('id'), course.get('id'), grade.get(id))
+                (student.get('id'), course.get('id'), grade.get('id'))
             )
             conn.commit()
         return {

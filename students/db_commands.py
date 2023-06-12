@@ -8,20 +8,24 @@ def get_group_id_by_code(conn: psycopg2.connect, group_code: int):
     """
     Выводит данные группы по коду группы
     Если группы с таким кодом не найдено — вызовет ошибку 404
+    Если код группы None – вернет None
     """
-    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
-        cur.execute(
-            "SELECT id FROM students_group WHERE code=(%s);",
-            (group_code,)
-        )
-        group = cur.fetchone()
-        if group:
-            return group
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'The group with code «{group_code}» does not exist'
+    if group_code is None:
+        return group_code
+    else:
+        with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+            cur.execute(
+                "SELECT id FROM students_group WHERE code=(%s);",
+                (group_code,)
             )
+            group = cur.fetchone()
+            if group:
+                return group
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f'The group with code «{group_code}» does not exist'
+                )
 
 
 def get_student_by_id_or_404(conn: psycopg2.connect, student_id: int):
@@ -153,12 +157,16 @@ def update_student(
                 )
             )
         conn.commit()
+    update_student = get_student_by_id_or_404(
+        conn=conn,
+        student_id=student_id
+    )
     return {
         'id': student_id,
-        'surname': student.surname,
-        'name': student.name,
-        'fathers_name': student.fathers_name,
-        'date_of_birth': student.date_of_birth,
+        'surname': update_student.get('surname'),
+        'name': update_student.get('name'),
+        'fathers_name': update_student.get('fathers_name'),
+        'date_of_birth': update_student.get('date_of_birth'),
         'group_code': student.group_code
     }
 

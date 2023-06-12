@@ -47,13 +47,11 @@ async def edit_student(
     conn=Depends(get_db_connection)
 ):
     """Изменить данные студента по ID"""
-    s = update_student(
+    return update_student(
         conn=conn,
         student=student,
         student_id=student_id
     )
-    print(s)
-    return s
 
 
 @router.delete('/{student_id}')
