@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
-from teachers.schemas import GetTeacherConfig
+from teachers.schemas import GetTeacher
 
 
 def get_all_teachers_db(
@@ -9,6 +9,9 @@ def get_all_teachers_db(
         limit: int,
         offset: int
 ):
+    """
+    Вернет список словарей с даммыми всех учителей
+    """
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -23,10 +26,46 @@ def get_all_teachers_db(
         return cur.fetchall()
 
 
+def get_teacher_info_or_empty_dict(
+        conn: psycopg2.connect,
+        id: int
+):
+    """
+    Возвращает информацию о преподавателе в виде словаря по ID
+    если ID = None – вернет пустой словарь
+    """
+    if id:
+        with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+            cur.execute(
+                """
+                SELECT *
+                FROM teacher
+                WHERE id=(%s);
+                """, (id,)
+            )
+            teacher = cur.fetchone()
+        course_teacher = {
+            'id': teacher.id,
+            'surname': teacher.surname,
+            'name': teacher.name,
+            'fathers_name': teacher.fathers_name
+        }
+    else:
+        course_teacher = {}
+    return course_teacher
+
+
 def get_teacher_id_or_none(
         conn: psycopg2.connect,
-        teacher: GetTeacherConfig | None
+        teacher: GetTeacher | None
 ):
+    """
+    Возвращает ID преподавателя по переданным данным
+    Если преподавателей с такими данными несколько — вернет первого найденного
+    Если преподавателя с такими данными нет — вызовет ошибку 404
+
+    Иначе вернет None
+    """
     if teacher:
         with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
             cur.execute(
@@ -51,10 +90,11 @@ def get_teacher_id_or_none(
         return teacher
 
 
-def get_teacher_via_id(
+def get_teacher_by_id(
         conn: psycopg2.connect,
         id: int
 ):
+    """Возвращает информацию о преподавателе по ID"""
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
