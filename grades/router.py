@@ -1,8 +1,8 @@
 from typing import List
 from fastapi import APIRouter, Depends
 from data.db_config import get_db_connection
-from grades.schemas import AddNewGrade, ReturnNewGrade
-from grades.db_commands import create_new_grade
+from grades.schemas import AddNewGrade, ReturnNewGrade, AddNewGradeForCourse, GradeInfoAfterCreate
+from grades.db_commands import create_new_grade, add_new_grade_for_course
 
 
 router = APIRouter(
@@ -23,13 +23,13 @@ async def add_new_grade(
     )
 
 
-@router.post('',)
-async def add_new_grade_for_course(
-    grade: AddNewGrade,
+@router.post('', response_model=GradeInfoAfterCreate)
+async def add_new_grade_for_course_by_student(
+    data_for_grade: AddNewGradeForCourse,
     conn=Depends(get_db_connection)
 ):
     """Добавляет оценку студенту за курс"""
-    return create_new_grade(
+    return add_new_grade_for_course(
         conn=conn,
-        grade_name=new_grade.grade
+        data_for_grade=data_for_grade
     )

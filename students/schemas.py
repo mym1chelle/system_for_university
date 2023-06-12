@@ -28,10 +28,10 @@ class StudentOptional(BaseModel):
     group_code: Optional[int]
 
 
-class GetAllStudentsInCourse(BaseModel):
+class GetStudentSmallInfo(BaseModel):
     id: int
     surname: str
     name: str
-    fathers_name: str
+    fathers_name: str | None
     date_of_birth: date
-    group_code: int
+    group_id: int | None

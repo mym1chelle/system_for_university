@@ -21,7 +21,7 @@ def get_group_id_by_code(conn: psycopg2.connect, group_code: int):
             )
 
 
-def get_student_by_id(conn: psycopg2.connect, student_id: int):
+def get_student_by_id_or_404(conn: psycopg2.connect, student_id: int):
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
@@ -147,7 +147,7 @@ def delete_student_db(
         conn: psycopg2.connect,
         student_id: int
 ):
-    get_student_by_id(conn=conn, student_id=student_id)
+    get_student_by_id_or_404(conn=conn, student_id=student_id)
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """

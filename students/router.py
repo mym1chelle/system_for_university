@@ -7,7 +7,7 @@ from students.schemas import (
 )
 from students.db_commands import (
     add_student_db,
-    get_student_by_id,
+    get_student_by_id_or_404,
     update_student,
     delete_student_db
 )
@@ -37,7 +37,7 @@ async def get_student(
     conn=Depends(get_db_connection)
 ):
     """Выбор студента по ID"""
-    return get_student_by_id(conn=conn, student_id=student_id)
+    return get_student_by_id_or_404(conn=conn, student_id=student_id)
 
 
 @router.put('/{student_id}', response_model=GetStudent)

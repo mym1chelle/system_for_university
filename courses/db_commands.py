@@ -2,7 +2,7 @@ import psycopg2
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
 from teachers.schemas import GetTeacher
-from teachers.db_commands import get_teacher_info_or_empty_dict
+from teachers.db_commands import get_teacher_info_or_empty_dict_by_id, get_teacher_info_or_empty_dict
 from courses.schemas import CreateCourse, CreateCourseResult, GetCourse
 
 
@@ -20,7 +20,7 @@ def get_course_by_name(
         return cur.fetchone()
 
 
-def get_course_by_id(
+def get_course_by_id_or_404(
         conn: psycopg2.connect,
         id: str
 ):
@@ -44,7 +44,7 @@ def get_course_by_id(
                 detail='The course does not exist'
             )
         else:
-            teacher = get_teacher_info_or_empty_dict(
+            teacher = get_teacher_info_or_empty_dict_by_id(
                 conn=conn,
                 id=course.teacher_id
             )
@@ -63,7 +63,7 @@ def get_course_by_id(
 def add_course_db(
         conn: psycopg2.connect,
         course: CreateCourse,
-        teacher_id: int | None
+        teacher: int | None
 ):
     is_course_exist = get_course_by_name(conn=conn, name=course.curse_name)
     if is_course_exist:
@@ -81,7 +81,7 @@ def add_course_db(
         )
         course_teacher = get_teacher_info_or_empty_dict(
             conn=conn,
-            id=teacher_id
+            teacher=teacher
         )
         with conn.cursor() as cur:
             cur.execute(

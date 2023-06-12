@@ -29,3 +29,10 @@ class GetCourseInfo(BaseModel):
     name: str
     course_programme: CourseProgrammeOptional
     teacher: GetTeacherFullInfo
+
+
+class GetCourseSmallInfo(BaseModel):
+    id: int
+    name: str
+    course_programme_id: int | None
+    teacher_id: int | None

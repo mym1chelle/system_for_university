@@ -1,7 +1,9 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
-from teachers.schemas import GetTeacher
+from grades.schemas import AddNewGradeForCourse
+from students.db_commands import get_student_by_id_or_404
+from courses.db_commands import get_course_by_id_or_404
 
 
 def get_grade_by_name(
@@ -17,6 +19,26 @@ def get_grade_by_name(
             (grade_name,)
         )
         return cur.fetchone()
+
+
+def get_grade_by_name_or_404(
+        conn: psycopg2.connect,
+        grade_name: str
+):
+    grade = get_grade_by_name(
+        conn=conn,
+        grade_name=grade_name
+    )
+    if not grade:
+        raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f'The grade {grade_name} does not exist'
+            )
+    else:
+        return {
+            'id': grade.id,
+            'grade': grade.grade
+        }
 
 
 def create_new_grade(
@@ -49,81 +71,64 @@ def create_new_grade(
         }
 
 
-def get_teacher_info_or_empty_dict(
+def grade_not_exists_or_404(
         conn: psycopg2.connect,
-        id: int
+        course_id: int,
+        student_id: int
 ):
-    """
-    Возвращает информацию о преподавателе в виде словаря по ID
-    если ID = None – вернет пустой словарь
-    """
-    if id:
-        with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
-            cur.execute(
-                """
-                SELECT *
-                FROM teacher
-                WHERE id=(%s);
-                """, (id,)
-            )
-            teacher = cur.fetchone()
-        course_teacher = {
-            'id': teacher.id,
-            'surname': teacher.surname,
-            'name': teacher.name,
-            'fathers_name': teacher.fathers_name
-        }
-    else:
-        course_teacher = {}
-    return course_teacher
-
-
-def get_teacher_id_or_none(
-        conn: psycopg2.connect,
-        teacher: GetTeacher | None
-):
-    """
-    Возвращает ID преподавателя по переданным данным
-    Если преподавателей с такими данными несколько — вернет первого найденного
-    Если преподавателя с такими данными нет — вызовет ошибку 404
-
-    Иначе вернет None
-    """
-    if teacher:
-        with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
-            cur.execute(
-                """
-                SELECT id FROM teacher
-                WHERE surname=COALESCE(%s, surname)
-                AND name=COALESCE(%s, name)
-                AND fathers_name=COALESCE(%s, fathers_name)
-                ;
-                """,
-                (teacher.surname, teacher.name, teacher.fathers_name)
-            )
-            is_teacher_exist = cur.fetchone()
-        if is_teacher_exist:
-            return is_teacher_exist.id
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail='The teacher does not exist'
-            )
-    else:
-        return teacher
-
-
-def get_teacher_by_id(
-        conn: psycopg2.connect,
-        id: int
-):
-    """Возвращает информацию о преподавателе по ID"""
+    print(course_id)
+    print(student_id)
     with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
         cur.execute(
             """
-                SELECT * FROM teacher
-                WHERE id=(%s);
-                """,
-            (id)
+            SELECT * FROM course_grade
+            WHERE course_id=(%s) AND student_id=(%s);
+            """,
+            (course_id, student_id)
         )
-        return cur.fetchone()
+        grade = cur.fetchone()
+    if grade:
+        raise HTTPException(
+            status_code=status.HTTP_200_OK,
+            detail='A grade for this student in this course already exists'
+        )
+    else:
+        return None
+
+
+def add_new_grade_for_course(
+        conn: psycopg2.connect,
+        data_for_grade: AddNewGradeForCourse
+):
+    grade = get_grade_by_name_or_404(
+        conn=conn,
+        grade_name=data_for_grade.grade
+    )
+    student = get_student_by_id_or_404(
+        conn=conn,
+        student_id=data_for_grade.student_id
+    )
+    course = get_course_by_id_or_404(
+        conn=conn,
+        id=data_for_grade.course_id
+    )
+    is_grade_exists = grade_not_exists_or_404(
+        conn=conn,
+        course_id=data_for_grade.course_id,
+        student_id=data_for_grade.student_id
+    )
+    if not is_grade_exists:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO course_grade (student_id, course_id, grade_id)
+                VALUES (%s, %s, %s);
+                """,
+                (student.get('id'), course.get('id'), grade.get(id))
+            )
+            conn.commit()
+        return {
+            'student': student,
+            'course': course,
+            'grade': grade
+        }

@@ -4,10 +4,11 @@ from data.db_config import get_db_connection
 from courses.schemas import CreateCourse, GetCourseInfo
 from courses.db_commands import (
     add_course_db,
-    get_course_by_id,
+    get_course_by_id_or_404,
     get_all_sudents_in_course
 )
-from students.schemas import GetAllStudentsInCourse
+from students.schemas import GetStudent
+from teachers.schemas import AddTeacherID
 
 
 router = APIRouter(
@@ -19,7 +20,7 @@ router = APIRouter(
 @router.post('', response_model=GetCourseInfo)
 async def add_course(
     course: CreateCourse,
-    teacher_id: int | None,
+    teacher: AddTeacherID = None,
     conn=Depends(get_db_connection)
 ):
     """Добавление нового курса"""
@@ -27,7 +28,7 @@ async def add_course(
     return add_course_db(
         conn=conn,
         course=course,
-        teacher_id=teacher_id
+        teacher=teacher
     )
 
 
@@ -38,14 +39,14 @@ async def get_course(
 ):
     """Вывод информации о курсе по ID"""
 
-    course = get_course_by_id(
+    course = get_course_by_id_or_404(
         conn=conn,
         id=course_id
     )
     return course
 
 
-@router.get('/{course_id}/students', response_model=List[GetAllStudentsInCourse])
+@router.get('/{course_id}/students', response_model=List[GetStudent])
 async def get_students_in_courser(
     course_id: int,
     conn=Depends(get_db_connection),

@@ -1,7 +1,7 @@
 import psycopg2
 from psycopg2.extras import NamedTupleCursor
 from fastapi import status, HTTPException
-from teachers.schemas import GetTeacher
+from teachers.schemas import AddTeacherID
 
 
 def get_all_teachers_db(
@@ -36,7 +36,7 @@ def get_all_teachers_db(
         ]
 
 
-def get_teacher_info_or_empty_dict(
+def get_teacher_info_or_empty_dict_by_id(
         conn: psycopg2.connect,
         id: int
 ):
@@ -85,3 +85,16 @@ def get_teacher_by_id(
             (id)
         )
         return cur.fetchone()
+
+
+def get_teacher_info_or_empty_dict(
+    conn: psycopg2.connect,
+    teacher: AddTeacherID
+):
+    if teacher is None:
+        return {}
+    else:
+        return get_teacher_info_or_empty_dict_by_id(
+            conn=conn,
+            id=teacher.id
+        )

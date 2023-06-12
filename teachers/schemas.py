@@ -20,3 +20,7 @@ class GetTeacher(BaseModel):
     surname: Optional[str]
     name: Optional[str]
     fathers_name: Optional[str]
+
+
+class AddTeacherID(BaseModel):
+    id: int
