@@ -7,7 +7,6 @@ from courses.db_commands import (
     get_course_by_id,
     get_all_sudents_in_course
 )
-from teachers.schemas import GetTeacher
 from students.schemas import GetAllStudentsInCourse
 
 
@@ -17,7 +16,7 @@ router = APIRouter(
 )
 
 
-@router.post('')
+@router.post('', response_model=GetCourseInfo)
 async def add_course(
     course: CreateCourse,
     teacher_id: int | None,

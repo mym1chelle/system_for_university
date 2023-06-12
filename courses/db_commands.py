@@ -41,7 +41,7 @@ def get_course_by_id(
         if not course:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail='The course programme does not exist'
+                detail='The course does not exist'
             )
         else:
             teacher = get_teacher_info_or_empty_dict(
@@ -60,23 +60,6 @@ def get_course_by_id(
             }
 
 
-def get_course_programme_by_id(
-        conn: psycopg2.connect,
-        id: int
-):
-    """
-    Возвращает данные о программе курса по ID
-    """
-    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
-        cur.execute(
-            """
-                SELECT * FROM course_programme
-                WHERE id=(%s);
-                """, (id,)
-        )
-        return cur.fetchone()
-
-
 def add_course_db(
         conn: psycopg2.connect,
         course: CreateCourse,
@@ -89,9 +72,12 @@ def add_course_db(
             detail=f'The course already exists: {course.curse_name}'
         )
     else:
-        course_programme_id = get_course_programme_id_or_none(
+        course_programme = get_course_programme_info_or_empty_dict(
             conn=conn,
-            course=course
+            id=get_course_programme_id_or_none(
+                conn=conn,
+                course=course
+            )
         )
         course_teacher = get_teacher_info_or_empty_dict(
             conn=conn,
@@ -103,14 +89,16 @@ def add_course_db(
                 INSERT INTO course (name, course_programme_id, teacher_id)
                 VALUES (%s, %s, %s);
                 """,
-                (course.curse_name, course_programme_id, course_teacher.get('id'))
+                (course.curse_name, course_programme.get('id'), course_teacher.get('id'))
             )
         conn.commit()
-        return CreateCourseResult(
-            curse_name=course.curse_name,
-            course_programme_id=course_programme_id,
-            teacher_id=course_teacher.get('id')
-        )
+        course = get_course_by_name(conn=conn, name=course.curse_name)
+        return {
+            'id': course.id,
+            'name': course.name,
+            'course_programme': course_programme,
+            'teacher': course_teacher
+        }
 
 
 def get_course_programme_id_or_none(
