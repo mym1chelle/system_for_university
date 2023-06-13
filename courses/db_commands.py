@@ -43,7 +43,7 @@ def get_course_by_id_or_404(
         if not course:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f'The course with ID {id} does not exist'
+                detail=f'The course with ID «{id}» does not exist'
             )
         else:
             teacher = get_teacher_info_or_empty_dict_by_id(
