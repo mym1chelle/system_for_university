@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from courses.schemas import CourseSmallInfo
-from students.schemas import StudentSmallInfo
+from courses.schemas import CourseInfo
+from students.schemas import StudentInfo
 
 
 class GradeNameForCreation(BaseModel):
@@ -23,8 +23,8 @@ class GradeForCourseInfoForCreation(BaseModel):
 
 
 class GradeInfoAfterCreate(BaseModel):
-    student: StudentSmallInfo
-    course: CourseSmallInfo
+    student: StudentInfo
+    course: CourseInfo
     grade: GradeInfo
 
 

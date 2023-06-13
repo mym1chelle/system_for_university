@@ -6,7 +6,7 @@ class TeacherFullInfo(BaseModel):
     id: int
     surname: str
     name: str
-    fathers_name: str | None
+    fathers_name: Optional[str]
 
 
 class TeacherFullInfoOptional(BaseModel):
@@ -17,4 +17,4 @@ class TeacherFullInfoOptional(BaseModel):
 
 
 class TeacherID(BaseModel):
-    id: int | None
+    id: Optional[int]

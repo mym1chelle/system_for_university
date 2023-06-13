@@ -23,10 +23,3 @@ class CourseInfo(BaseModel):
     name: str
     course_programme: CourseProgrammeOptional
     teacher: TeacherFullInfoOptional
-
-
-class CourseSmallInfo(BaseModel):
-    id: int
-    name: str
-    course_programme_id: int | None
-    teacher_id: int | None

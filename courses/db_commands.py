@@ -183,28 +183,33 @@ def get_all_sudents_in_course(
     которые проходят выбранный курс
     Если студентов нет на данном курсе — вернет пустой список
     """
-    with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
-        cur.execute(
-            """
-                SELECT st.id, st.surname, st.name, st.fathers_name, st.date_of_birth, gp.code FROM course as cr
-                JOIN student_to_course as stct ON stct.course_id = cr.id
-                JOIN student as st ON st.id = stct.student_id
-                LEFT JOIN students_group as gp ON gp.id=st.group_id
-                WHERE cr.id=(%s)
-                ORDER BY id
-                LIMIT (%s)
-                OFFSET (%s);
-                """, (course_id, limit, offset)
-        )
-        students = cur.fetchall()
-        return [
-            {
-                'id': student.id,
-                'surname': student.surname,
-                'name': student.name,
-                'fathers_name': student.fathers_name,
-                'date_of_birth': student.date_of_birth,
-                'group_code': student.code
+    course = get_course_by_id_or_404(
+        conn=conn,
+        id=course_id
+    )
+    if course:
+        with conn.cursor(cursor_factory=NamedTupleCursor) as cur:
+            cur.execute(
+                """
+                    SELECT st.id, st.surname, st.name, st.fathers_name, st.date_of_birth, gp.code FROM course as cr
+                    JOIN student_to_course as stct ON stct.course_id = cr.id
+                    JOIN student as st ON st.id = stct.student_id
+                    LEFT JOIN students_group as gp ON gp.id=st.group_id
+                    WHERE cr.id=(%s)
+                    ORDER BY id
+                    LIMIT (%s)
+                    OFFSET (%s);
+                    """, (course_id, limit, offset)
+            )
+            students = cur.fetchall()
+            return [
+                {
+                    'id': student.id,
+                    'surname': student.surname,
+                    'name': student.name,
+                    'fathers_name': student.fathers_name,
+                    'date_of_birth': student.date_of_birth,
+                    'group_code': student.code
 
-            } for student in students
-        ]
+                } for student in students
+            ]

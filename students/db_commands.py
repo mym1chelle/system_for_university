@@ -190,4 +190,4 @@ def delete_student_db(
             )
         )
         conn.commit()
-    return {"detail": f"Student with ID «{student_id}» was delete"}
+    return {"detail": f"The student with ID «{student_id}» was delete"}

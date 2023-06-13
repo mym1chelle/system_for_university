@@ -15,9 +15,9 @@ class StudentInfo(BaseModel):
     id: int
     surname: str
     name: str
-    fathers_name: Optional[str] | None
+    fathers_name: Optional[str]
     date_of_birth: date
-    group_code: Optional[int] | None
+    group_code: Optional[int]
 
 
 class StudentInfoOptional(BaseModel):
@@ -26,12 +26,3 @@ class StudentInfoOptional(BaseModel):
     fathers_name: Optional[str]
     date_of_birth: Optional[date]
     group_code: Optional[int]
-
-
-class StudentSmallInfo(BaseModel):
-    id: int
-    surname: str
-    name: str
-    fathers_name: str | None
-    date_of_birth: date
-    group_id: int | None
